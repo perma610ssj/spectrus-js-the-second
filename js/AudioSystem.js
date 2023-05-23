@@ -36,7 +36,7 @@ class AudioSystem { // eslint-disable-line no-unused-vars
   update(delta) {
     // Abort update if no time has passed.
     if (delta === 0) { return false; }
-
+    if (this.spec.pause) { return false; }
     // Re-run FFT.
     this.fft.update();
 
