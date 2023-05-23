@@ -24,11 +24,13 @@ class FFTView {
         this.scaleWidth = 100;
         this.viewPortRight = this.canvas.width - this.scaleWidth;
         this.viewPortBottom = this.canvas.height;
-        this.x = this.viewPortRight - 310;
-        this.y = this.viewPortBottom - 310;
+        this.w = 300;
+        this.h = 300;
+        this.x = this.viewPortRight - this.w;
+        this.y = this.viewPortBottom - this.h;
         this.scaleMode = 'dB';
-        this.specMin = -32;
-        this.specMax = 10;
+        this.hzMin = 0;
+        this.hzMax = 1000;
         this.scaleX = 1;
         this.scaleY = 1;
         this.speed = 100;
@@ -43,16 +45,71 @@ class FFTView {
     get fft() {
         return this.audioSystem.fft;
     }
+    get tickSpacing() {
+        return this.w /  (this.hzMax / this.hzFromIndex(1))
+    }
 
     draw(data, dt) {
-        this.ctx.fillRect(this.x, this.y, 300, 300)
-        this.ctx.fillStyle = 'rgb(255,255,255)'
-
+        // Draw container
+        this.drawContainer()
+        this.update(data, dt)
     }
 
     drawContainer() {
-        this.ctx.clearRect(0, 0, 200, 200)
+        this.ctx.fillStyle = this.getColor(0)
+        this.ctx.fillRect(this.x, this.y, this.w, this.h);
+
+        // Draw borders
+        this.ctx.fillStyle = 'rgb(255,255,255)'
+        this.ctx.fillRect(this.x, this.y, this.w, 1);
+        this.ctx.fillRect(this.x, this.y, 1, this.h);
+        this.ctx.fillRect(this.x + this.w, this.y, 1, this.h);
+        this.ctx.fillRect(this.x, this.y + this.h, this.w, 1);
     }
 
+    update(data, dt) {
+        // Go through FFT and draw bars
+        let indexLimit = this.hzMax / this.hzFromIndex(1);
+        for (var i=0; i < indexLimit; i++){
+            this.ctx.fillStyle = this.getColor(data[i])
+            // this.ctx.fillStyle = this.barColor(data[i]) // Highlight peaks
+            
+            this.ctx.fillRect(
+                this.x + (i * this.tickSpacing), 
+                this.y + this.h, 
+                this.tickSpacing, 
+                -1 * (this.h / 255) * data[i] 
+            );
+        }
+    }
+
+    // converts array position to hz (float)
+    // if i=1, this is the hz per bin
+    hzFromIndex(i) {
+        return i * this.sampleRate / this.frequencyBinCount
+    }
+
+    // Returns an rgb string given a 0-255 value
+    barColor(intensity) {
+        // Flatten ends of histogram
+        let percentile = 0.5
+
+        if (intensity <= percentile*255) {
+            intensity = 0
+        }
+        if (intensity >= 255 - percentile*255) {
+            intensity = 255
+        }
+
+        return `rgb(0, ${intensity}, ${intensity*0.2})`
+    }
+
+    getColor(d) {
+        if (colormap === undefined) { return `rbg(${d},${d},${d})`; }
+        return (`rgb(
+          ${colormap[this.colormap][d][0] * 255},
+          ${colormap[this.colormap][d][1] * 255},
+          ${colormap[this.colormap][d][2] * 255})`);
+      }
 
 }
