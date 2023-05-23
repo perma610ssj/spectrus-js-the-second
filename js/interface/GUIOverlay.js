@@ -9,7 +9,7 @@ class GUIOverlay { // eslint-disable-line no-unused-vars
     this.viewPortRight = this.canvas.width - this.spec.scaleWidth;
     this.viewPortBottom = this.canvas.height;
     this.ctx = this.canvas.getContext('2d');
-    this.mouse = new MouseListener(this.mouseDown.bind(this), this.mouseUp.bind(this));
+    this.mouse = new MouseListener(this.mouseDown.bind(this), this.mouseUp.bind(this), this.mwheelChange.bind(this));
     this.ruler = [{ x: 0, y: 0, active: false }];
     this.pitchFloorAlert = document.querySelector('#pitchFloorAlert');
     this.pitchAlert = parseInt(this.pitchFloorAlert.value, 10);
@@ -52,6 +52,11 @@ class GUIOverlay { // eslint-disable-line no-unused-vars
   mouseUp(event) { // eslint-disable-line no-unused-vars,class-methods-use-this
     //
   } // should be replaced with a better system which I can't remember the name of
+
+  // Changes spectrogram scaling on mousewheel event
+  mwheelChange(event) {
+    this.spec.specMaxIncrement(event.deltaY * 10)
+  }
 
   // get the size of the canvas
   updateScale() {

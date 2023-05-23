@@ -1,5 +1,5 @@
 class MouseListener { // eslint-disable-line no-unused-vars
-  constructor(mousedownFunc, mouseupFunc) {
+  constructor(mousedownFunc, mouseupFunc, mwheelFunc) {
     this.keys = [];
     this.x = 0;
     this.y = 0;
@@ -18,5 +18,8 @@ class MouseListener { // eslint-disable-line no-unused-vars
       this.keys.splice(this.keys.indexOf(event.button));
       mouseupFunc(event);
     });
+    document.addEventListener('wheel', (event) => {
+      mwheelFunc(event);
+    })
   }
 }
