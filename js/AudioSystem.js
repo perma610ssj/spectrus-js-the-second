@@ -15,12 +15,16 @@ class AudioSystem { // eslint-disable-line no-unused-vars
 
     // Initialize canvases for the display.
     this.primaryCanvas = div.appendChild(document.createElement('canvas'));
+    this.fftCanvas = div.appendChild(document.createElement('canvas'));
     this.guiCanvas = div.appendChild(document.createElement('canvas'));
 
-    // Initialize and draw Spectrogram and GUI overlay.
+    // Initialize and draw Spectrogram, FFT, and GUI overlay.
     this.spec = new Spectrogram(this);
     this.spec.updateScale();
     this.spec.drawScale();
+
+    this.fftView = new FFTView(this);
+    this.fftView.drawContainer();
     this.gui = new GUIOverlay(this);
   }
 
@@ -45,6 +49,9 @@ class AudioSystem { // eslint-disable-line no-unused-vars
     // Redraw spectrogram.
     this.spec.updateScale();
     this.spec.draw(this.fft.data, delta);
+
+    // Redraw FFTview.
+    this.fftView.draw(this.fft.data, delta);
 
     return true;
   }
