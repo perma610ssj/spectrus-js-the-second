@@ -132,6 +132,9 @@ class Spectrogram extends Visualizer{ // eslint-disable-line no-unused-vars
     super(audioSystem, container);
   }
 
+  get canvas() {
+    return this.audioSystem.specCanvas;
+  }
   /** Clears the canvas. */
   clear() {
     this.ctx.fillStyle = this.getColor(0);

@@ -18,17 +18,17 @@
     <div id="div"></div>
     <div id="controls-wrap">
       <div class="">
-        <button type="button" name="button" onclick="audioSystem.spec.hzMaxIncrement(1000);">+</button>
-        <button type="button" name="button" onclick="audioSystem.spec.hzMaxIncrement(-1000);">-</button>
+        <button type="button" name="button" onclick="audioSystem.activeVisualizer.hzMaxIncrement(1000);">+</button>
+        <button type="button" name="button" onclick="audioSystem.activeVisualizer.hzMaxIncrement(-1000);">-</button>
         <span></span>
-        <button type="button" name="button" onclick="audioSystem.spec.trackFormantToggle();" id="trackFormantToggle">formant tracking</button>
-        <button type="button" name="button" onclick="audioSystem.spec.scaleModeToggle();" id="scaleModeToggle">scale<br>mode</button>
+        <button type="button" name="button" onclick="audioSystem.activeVisualizer.trackFormantToggle();" id="trackFormantToggle">formant tracking</button>
+        <button type="button" name="button" onclick="audioSystem.activeVisualizer.scaleModeToggle();" id="scaleModeToggle">scale<br>mode</button>
         <div class="">
           <input id="pitchFloorAlert" type="number" name="" value="0" title="minimum pitch alert">
         </div>
-        <button type="button" name="button" onclick="audioSystem.spec.notationToggle();" id="notationToggle">experimental notation</button>
+        <button type="button" name="button" onclick="audioSystem.activeVisualizer.notationToggle();" id="notationToggle">experimental notation</button>
         <button type="button" name="button" onclick="audioSystem.gui.harmonicstoggle();" id="harmonicstoggle">show harmonics</button>
-        <button type="button" name="button" onclick="audioSystem.spec.pitchTrackModeToggle();" id="pitchtrackmode">pitch mode</button>
+        <button type="button" name="button" onclick="audioSystem.activeVisualizer.pitchTrackModeToggle();" id="pitchtrackmode">pitch mode</button>
         <div>
           <button type="button" name="button" onclick="audioSystem.toggleView();" id="viewToggle">1D FFT</button>
         </div>

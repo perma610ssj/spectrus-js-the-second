@@ -14,21 +14,31 @@ class AudioSystem { // eslint-disable-line no-unused-vars
     this.avgFPS = 0;
 
     // Initialize canvases for the display.
-    this.primaryCanvas = div.appendChild(document.createElement('canvas'));
+    this.specCanvas = div.appendChild(document.createElement('canvas'));
     this.fftCanvas = div.appendChild(document.createElement('canvas'));
     this.guiCanvas = div.appendChild(document.createElement('canvas'));
+    
+    // Only show spectrogram by default.
+    this.specCanvas.style.visibility = 'visible';
+    this.fftCanvas.style.visibility = 'hidden';
 
-    // Initialize and draw Spectrogram, 1D FFT, and GUI overlay.
+    // Initialize and draw visualizers, and GUI overlay.
     this.spec = new Spectrogram(this);
     this.spec.updateScale();
     this.spec.drawScale();
 
     this.fftView = new FFTView(this);
-    this.fftView.drawContainer();
+    this.fftView.updateScale();
+    this.fftView.drawScale();
+    
     this.gui = new GUIOverlay(this);
 
     // Initialize Toggle for choosing between views
     this.visualizeMode = "spectrogram";
+
+    // Variable to point to currently active visualizer
+    // so that html buttons toggles the correct ones. 
+    this.activeVisualizer = this.spec;
   }
 
   /**
@@ -49,20 +59,31 @@ class AudioSystem { // eslint-disable-line no-unused-vars
     this.gui.update();
 
     // Redraw spectrogram.
-    if (this.visualizeMode == "spectrogram"){
-      this.spec.updateScale();
-      this.spec.draw(this.fft.data, delta);
-    }
+    this.spec.updateScale();
+    this.spec.draw(this.fft.data, delta);
     
     // Redraw FFTview
-    else if (this.visualizeMode == "1d-fft"){
-      this.fftView.draw(this.fft.data, delta);
-    }
+    this.fftView.updateScale();
+    this.fftView.draw(this.fft.data, delta);
+
 
     return true;
   }
 
   toggleView() {
-    this.visualizeMode = this.visualizeMode == "spectrogram" ? '1d-fft' : 'spectrogram'
+    if (this.visualizeMode == "spectrogram") {
+      this.visualizeMode = "1d-fft";
+      this.activeVisualizer = this.fftView;
+      this.specCanvas.style.visibility = 'hidden';
+      this.fftCanvas.style.visibility = 'visible';
+    }
+    else if (this.visualizeMode == "1d-fft") {
+      this.visualizeMode = "spectrogram";
+      this.activeVisualizer = this.spec;
+      this.specCanvas.style.visibility = 'visible';
+      this.fftCanvas.style.visibility = 'hidden';
+    }
+
+
   }
 }

@@ -58,7 +58,7 @@ class Visualizer {
     }
 
     get canvas() {
-        return this.audioSystem.primaryCanvas
+        return this.audioSystem.primaryCanvas;
     }
 
     get fft() {

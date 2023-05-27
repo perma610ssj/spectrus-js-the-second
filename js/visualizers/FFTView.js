@@ -1,93 +1,124 @@
 /**
  * This class displays the FFT information as frequency vs intensity (dB)
  */
-class FFTView {
+class FFTView extends Visualizer{
     /**
    * Saves variables, initializes dimensions and formants, and draws the scale.
    * @param {AudioSystem} audioSystem A reference to the parent, used to access the FFT analyzer
    * @param {Window} container The reference to the window, used to access dimensions for resizing.
    */
     constructor(audioSystem, container=window) {
-        // Initialize audio variables.
-        this.audioSystem = audioSystem;
-        this.sampleRate = this.fft.audioCtx.sampleRate;
-        this.frequencyBinCount = this.fft.analyser.fftSize;
-
-        // Initialize container.
-        this.container = container;
-        this.canvas.width = container.innerWidth;
-        this.canvas.height = container.innerHeight;
-        this.ctx = this.canvas.getContext('2d');
-        this.colormap = 'viridis';
-
-        // Initialize and draw scale
-        this.scaleWidth = 100;
-        this.viewPortRight = this.canvas.width - this.scaleWidth;
-        this.viewPortBottom = this.canvas.height;
-        this.w = 300;
-        this.h = 300;
-        this.x = this.viewPortRight - this.w;
-        this.y = this.viewPortBottom - this.h;
-        this.scaleMode = 'dB';
-        this.hzMin = 0;
+        super(audioSystem, container)
         this.hzMax = 1000;
-        this.scaleX = 1;
-        this.scaleY = 1;
-        this.speed = 100;
+        this.viewPortRight = this.canvas.width;
+        this.viewPortBottom = this.canvas.height - this.scaleWidth
     }
 
     /** References the canvas. */
     get canvas() {
-        return this.audioSystem.fftCanvas;
+        return this.audioSystem.fftCanvas
     }
 
     /** References the FFT analyzer. */
     get fft() {
         return this.audioSystem.fft;
     }
-    get tickSpacing() {
-        return this.w /  (this.hzMax / this.hzFromIndex(1))
+
+    get barSpacing() {
+        if (this.scaleMode === 'linear') {
+            return this.canvas.width /  (this.hzMax / this.hzFromIndex(1))
+        } else {
+
+        }
     }
 
     draw(data, dt) {
         // Draw container
-        this.drawContainer()
+        this.clear()
         this.update(data, dt)
     }
 
-    drawContainer() {
-        this.ctx.fillStyle = this.getColor(0)
-        this.ctx.fillRect(this.x, this.y, this.w, this.h);
-
-        // Draw borders
-        this.ctx.fillStyle = 'rgb(255,255,255)'
-        this.ctx.fillRect(this.x, this.y, this.w, 1);
-        this.ctx.fillRect(this.x, this.y, 1, this.h);
-        this.ctx.fillRect(this.x + this.w, this.y, 1, this.h);
-        this.ctx.fillRect(this.x, this.y + this.h, this.w, 1);
+    clear() {
+        this.ctx.fillStyle = this.getColor(0);
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height - this.scaleWidth);
     }
 
     update(data, dt) {
+        this.clear();
         // Go through FFT and draw bars
         let indexLimit = this.hzMax / this.hzFromIndex(1);
+
         for (var i=0; i < indexLimit; i++){
             this.ctx.fillStyle = this.getColor(data[i])
             // this.ctx.fillStyle = this.barColor(data[i]) // Highlight peaks
             
             this.ctx.fillRect(
-                this.x + (i * this.tickSpacing), 
-                this.y + this.h, 
-                this.tickSpacing, 
-                -1 * (this.h / 255) * data[i] 
+                i * this.barSpacing, 
+                this.viewPortBottom, 
+                this.barSpacing, 
+                -1 * ( (this.viewPortBottom*.70) / 255) * data[i] 
             );
         }
     }
 
-    // converts array position to hz (float)
-    // if i=1, this is the hz per bin
-    hzFromIndex(i) {
-        return i * this.sampleRate / this.frequencyBinCount
+    drawScale(){
+        this.ctx.clearRect(0, this.viewPortBottom, this.canvas.width, this.scaleWidth);
+        let tmpStepDist = 50;
+
+        // ========= notes scale =========
+        let tmpHZ;
+        this.ctx.font = `${12}px Mono`;
+        const A1 = 55;
+
+        // ========= main scale =========
+        if (this.scaleMode === 'log') {
+            for (let i = 1; i < this.canvas.width / tmpStepDist; i++) {
+                this.ctx.fillStyle = '#888';
+                this.ctx.fillRect((i * tmpStepDist), this.viewPortBottom, 1, 20);
+                this.renderText(
+                    Math.floor(this.hzFromX(i * tmpStepDist)),
+                    (i * tmpStepDist) - 5,
+                    this.viewPortBottom,
+                    '#777',
+                    '15px',
+                );
+            }
+            // do some manual steps
+            const tmpSteps = [100, 500, 1000, 5000, 10000];
+            for (let i = 0; i < tmpSteps.length; i++) {
+            this.ctx.fillStyle = '#555';
+            this.ctx.fillRect(this.viewPortRight, this.xFromHz(tmpSteps[i]), 30, 1);
+            this.renderText(
+                Math.floor(tmpSteps[i]),
+                this.xFromHz(tmpSteps[i]) + 5,
+                this.viewPortBottom + 30,
+                '#444',
+                '15px',
+            );
+            }
+        } else if (this.scaleMode === 'linear') {
+            
+            tmpStepDist = 100; // hz
+            for (let i = 0; i < this.hzMax / tmpStepDist; i++) {
+            this.ctx.fillStyle = '#555';
+            this.ctx.fillRect(this.xFromHz(i * tmpStepDist), this.viewPortBottom, 1, 5);
+            }
+
+            tmpStepDist = 500; // hz
+            for (let i = 0; i < this.hzMax / tmpStepDist; i++) {
+            this.ctx.fillStyle = '#777';
+            this.ctx.fillRect(this.xFromHz(i * tmpStepDist), this.viewPortBottom, 1, 10);
+            this.renderText(
+                Math.floor(i * tmpStepDist),
+                this.xFromHz(i * tmpStepDist) - 5,
+                this.viewPortBottom + 20,
+                '#777',
+                '15px',
+            );
+            }
+        }
     }
+
 
     // Returns an rgb string given a 0-255 value
     barColor(intensity) {
@@ -111,5 +142,37 @@ class FFTView {
           ${colormap[this.colormap][d][1] * 255},
           ${colormap[this.colormap][d][2] * 255})`);
       }
+
+
+    // takes an index and scales it to its X coordinate
+    xFromIndex(index) {
+        if (this.scaleMode === 'linear') {
+        return  (index * this.scaleX);
+        }
+        if (this.scaleMode === 'log') {
+        return(getBaseLog(index, this.logScale) * this.scaleX);
+        }
+        throw new Error('invalid scale mode');
+    }
+
+    // takes a X value and returns its index in the array
+    // undoes scaling
+    indexFromX(x) {
+        if (this.scaleMode === 'linear') {
+        return x / this.scaleX;
+        }
+        if (this.scaleMode === 'log') {
+        return unBaseLog((x) / this.scaleX, this.logScale);
+        }
+        throw new Error('invalid scale mode');
+    }
+
+  xFromHz(hz) {
+    return this.xFromIndex(this.indexFromHz(hz));
+  }
+
+  hzFromX(x) {
+    return this.hzFromIndex(this.indexFromX(x));
+  }
 
 }
