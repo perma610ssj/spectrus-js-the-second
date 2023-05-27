@@ -122,115 +122,14 @@ function getFormants(array, formantCount = 3) {
 }
 
 /** This class performs FFT and renders the spectrogram and the scale. */
-class Spectrogram { // eslint-disable-line no-unused-vars
+class Spectrogram extends Visualizer{ // eslint-disable-line no-unused-vars
   /**
    * Saves variables, initializes dimensions and formants, and draws the scale.
    * @param {AudioSystem} audioSystem A reference to the parent, used to access the FFT analyzer
    * @param {Window} container The reference to the window, used to access dimensions for resizing.
    */
   constructor(audioSystem, container = window) {
-    // Initialize audio variables.
-    this.audioSystem = audioSystem;
-    this.sampleRate = this.fft.audioCtx.sampleRate;
-    this.frequencyBinCount = this.fft.analyser.fftSize;
-
-    // Initialize container.
-    this.container = container;
-    this.canvas.width = container.innerWidth;
-    this.canvas.height = container.innerHeight;
-    this.ctx = this.canvas.getContext('2d');
-    this.colormap = 'viridis';
-
-    // Initialize and draw scale.
-    this.scaleWidth = 100;
-    this.viewPortRight = this.canvas.width - this.scaleWidth;
-    this.viewPortBottom = this.canvas.height;
-    this.scaleMode = 'log';
-    this.pitchTrackMode = false;
-    this.logScale = 2;
-    this.specMin = 0;
-    this.specMax = 15000;
-    this.scaleX = 1;
-    this.scaleY = 1;
-    this.speed = 100;
-    this.notationType = 'musical';
-    // how much accumulative width in pixels should be covered this frame
-    // to make scrolling more time-accurate
-    this.running_width = 0;
-
-    // Configure spectrogram options.
-    this.pause = false;
-    this.track = {
-      fundamental: false,
-      formants: false,
-      formantCount: 3,
-      fundamentalMinAmp: 150,
-      fundamentalAmp: 0,
-    };
-
-    // Initialize variables for formant tracking.
-    this.f = Array(5).fill({ index: 0, amp: 0, active: false });
-    this.formantColors = FORMANT_COLORS;
-
-    // Draw the scale.
-    this.clear();
-    this.updateScale();
-  }
-
-  /** References the canvas. */
-  get canvas() {
-    return this.audioSystem.primaryCanvas;
-  }
-
-  /** References the FFT analyzer. */
-  get fft() {
-    return this.audioSystem.fft;
-  }
-
-  update() {
-    if (this.pause) return;
-    this.getFundamental(this.fft.data);
-  }
-
-  /**
-   * Gets the scale for the canvas.
-   *
-   * This method calculates the scaling factor for the spectrogram and the scale/ruler, i.e, what
-   * the fft.data values need to be multiplied by to fill the screen.
-   *
-   * @todo Check if this.scaleX is necessary.
-   */
-  updateScale() {
-    // Check if the canvas has been resized and needs to be re-drawn.
-    const reDraw = (this.canvas.width !== this.container.innerWidth)
-    || (this.canvas.height !== this.container.innerHeight);
-
-    // If it needs to be re-drawn, calculate the new dimensions.
-    if (reDraw) {
-      this.sampleRate = this.fft.audioCtx.sampleRate;
-      this.frequencyBinCount = this.fft.analyser.fftSize;
-      this.canvas.width = this.container.innerWidth;
-      this.canvas.height = this.container.innerHeight;
-      this.viewPortRight = this.canvas.width - this.scaleWidth;
-      this.viewPortBottom = this.canvas.height;
-    }
-
-    // Calculate scaling for the spectrogram.
-    if (this.scaleMode === 'linear') {
-      this.scaleX = this.canvas.width / this.indexFromHz(this.specMax);
-      this.scaleY = this.canvas.height / this.indexFromHz(this.specMax);
-    } else if (this.scaleMode === 'log') {
-      this.scaleX = this.canvas.width
-        / getBaseLog(this.indexFromHz(this.specMax), this.logScale);
-      this.scaleY = this.canvas.height
-        / getBaseLog(this.indexFromHz(this.specMax), this.logScale);
-    }
-
-    // Re-draw if necessary.
-    if (reDraw) {
-      this.clear();
-      this.drawScale();
-    }
+    super(audioSystem, container);
   }
 
   /** Clears the canvas. */
@@ -443,12 +342,12 @@ class Spectrogram { // eslint-disable-line no-unused-vars
       }
     } else if (this.scaleMode === 'linear') {
       tmpStepDist = 100; // hz
-      for (let i = 0; i < this.specMax / tmpStepDist; i++) {
+      for (let i = 0; i < this.hzMax / tmpStepDist; i++) {
         this.ctx.fillStyle = '#555';
         this.ctx.fillRect(this.viewPortRight, this.yFromHz(i * tmpStepDist), 5, 1);
       }
       tmpStepDist = 500; // hz
-      for (let i = 0; i < this.specMax / tmpStepDist; i++) {
+      for (let i = 0; i < this.hzMax / tmpStepDist; i++) {
         this.ctx.fillStyle = '#777';
         this.ctx.fillRect(this.viewPortRight, this.yFromHz(i * tmpStepDist), 10, 1);
         this.renderText(
@@ -460,16 +359,6 @@ class Spectrogram { // eslint-disable-line no-unused-vars
         );
       }
     }
-  }
-
-  // takes index and returns its Hz value
-  hzFromIndex(index) {
-    return (index / this.frequencyBinCount) * (this.sampleRate / 1);
-  }
-
-  // converts hz to array position (float)
-  indexFromHz(hz) {
-    return (hz / (this.sampleRate / 1)) * this.frequencyBinCount;
   }
 
   // takes an index and scales it to its Y coordinate
@@ -503,72 +392,4 @@ class Spectrogram { // eslint-disable-line no-unused-vars
     return this.hzFromIndex(this.indexFromY(y));
   }
 
-  /**
-   * Attempts to find the fundamental index.
-   * @param {Uint8Array} array Contains amplitudes of detected audio.
-   * @returns {Object} Contains index and amplitude of fundamental frequency if found.
-   */
-  getFundamental(array) {
-    // get highest peak
-    let highestPeak = 0;
-
-    const tmpMaxCheck = Math.floor(this.indexFromHz(Math.min(5000, array.length)));
-    for (let i = 0; i < tmpMaxCheck; i++) { // fast version?
-      if (array[i] > highestPeak) {
-        highestPeak = array[i];
-      }
-    }
-    const peakThreshold = highestPeak * 0.7; // only look at things above this theshold
-    let currentPeakIndex = 0;
-    let currentPeakAmplitude = 0;
-    for (let i = 0; i < tmpMaxCheck; i++) {
-      // only look above threshold
-      if (array[i] > peakThreshold) {
-        // look for peaks
-        if (array[i] > currentPeakAmplitude) {
-          currentPeakIndex = i;
-          currentPeakAmplitude = array[i];
-        }
-      } else if (currentPeakIndex > 0) {
-        currentPeakIndex = getMoreAccurateFundamental(array, currentPeakIndex);
-        if (currentPeakAmplitude > this.track.fundamentalMinAmp) {
-          this.f[0] = Math.max(currentPeakIndex, 1);
-        }
-        this.track.fundamentalAmp = currentPeakAmplitude;
-        return { index: Math.max(currentPeakIndex, 1), amp: currentPeakAmplitude };
-      }
-    }
-    return { index: 0, amplitude: 0 };
-  }
-
-  specMaxIncrement(amount) {
-    this.specMax = Math.min(Math.max(this.specMax + amount, 1000), 15000);
-    this.updateScale();
-    this.drawScale();
-  }
-
-  trackFormantToggle() {
-    this.track.fundamental = !this.track.fundamental;
-    this.track.formants = !this.track.formants;
-  }
-
-  scaleModeToggle() {
-    this.scaleMode = this.scaleMode === 'log' ? 'linear' : 'log';
-    this.updateScale();
-    this.drawScale();
-  }
-
-  pauseToggle() {
-    this.pause = !this.pause;
-  }
-
-  notationToggle() {
-    this.notationType = this.notationType === 'experimental' ? 'musical' : 'experimental';
-    this.updateScale();
-    this.drawScale();
-  }
-
-  pitchTrackModeToggle() {
-    this.pitchTrackMode = !this.pitchTrackMode;
-  }
 }

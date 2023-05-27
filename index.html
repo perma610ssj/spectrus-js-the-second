@@ -18,8 +18,8 @@
     <div id="div"></div>
     <div id="controls-wrap">
       <div class="">
-        <button type="button" name="button" onclick="audioSystem.spec.specMaxIncrement(1000);">+</button>
-        <button type="button" name="button" onclick="audioSystem.spec.specMaxIncrement(-1000);">-</button>
+        <button type="button" name="button" onclick="audioSystem.spec.hzMaxIncrement(1000);">+</button>
+        <button type="button" name="button" onclick="audioSystem.spec.hzMaxIncrement(-1000);">-</button>
         <span></span>
         <button type="button" name="button" onclick="audioSystem.spec.trackFormantToggle();" id="trackFormantToggle">formant tracking</button>
         <button type="button" name="button" onclick="audioSystem.spec.scaleModeToggle();" id="scaleModeToggle">scale<br>mode</button>
@@ -29,6 +29,9 @@
         <button type="button" name="button" onclick="audioSystem.spec.notationToggle();" id="notationToggle">experimental notation</button>
         <button type="button" name="button" onclick="audioSystem.gui.harmonicstoggle();" id="harmonicstoggle">show harmonics</button>
         <button type="button" name="button" onclick="audioSystem.spec.pitchTrackModeToggle();" id="pitchtrackmode">pitch mode</button>
+        <div>
+          <button type="button" name="button" onclick="audioSystem.toggleView();" id="viewToggle">1D FFT</button>
+        </div>
         <!--  -->
       </div>
     </div>
@@ -36,9 +39,12 @@
     <script src="js/interface/MouseListener.js" charset="utf-8"></script>
     <script src="js/noteFreqTable.js" charset="utf-8"></script>
     <script src="js/FFT/FFTAnalyser.js" charset="utf-8"></script>
-    <script src="js/FFT/FFTView.js" charset="utf-8"></script>
     <script src="js/animFrameLoop.js" charset="utf-8"></script>
-    <script src="js/spectrogram/Spectrogram.js" charset="utf-8"></script>
+    
+    <script src="js/visualizers/Visualizer.js" charset="utf-8"></script>
+    <script src="js/visualizers/Spectrogram.js" charset="utf-8"></script>
+    <script src="js/visualizers/FFTView.js" charset="utf-8"></script>
+
     <script src="js/interface/GUIOverlay.js" charset="utf-8"></script>
     <script src="js/AudioSystem.js" charset="utf-8"></script>
     <script src="js/main.js" charset="utf-8"></script>

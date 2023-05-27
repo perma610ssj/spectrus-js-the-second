@@ -18,7 +18,7 @@ class AudioSystem { // eslint-disable-line no-unused-vars
     this.fftCanvas = div.appendChild(document.createElement('canvas'));
     this.guiCanvas = div.appendChild(document.createElement('canvas'));
 
-    // Initialize and draw Spectrogram, FFT, and GUI overlay.
+    // Initialize and draw Spectrogram, 1D FFT, and GUI overlay.
     this.spec = new Spectrogram(this);
     this.spec.updateScale();
     this.spec.drawScale();
@@ -26,6 +26,9 @@ class AudioSystem { // eslint-disable-line no-unused-vars
     this.fftView = new FFTView(this);
     this.fftView.drawContainer();
     this.gui = new GUIOverlay(this);
+
+    // Initialize Toggle for choosing between views
+    this.visualizeMode = "spectrogram";
   }
 
   /**
@@ -36,7 +39,6 @@ class AudioSystem { // eslint-disable-line no-unused-vars
   update(delta) {
     // Abort update if no time has passed.
     if (delta === 0) { return false; }
-    if (this.spec.pause) { return false; }
     // Re-run FFT.
     this.fft.update();
 
@@ -47,12 +49,20 @@ class AudioSystem { // eslint-disable-line no-unused-vars
     this.gui.update();
 
     // Redraw spectrogram.
-    this.spec.updateScale();
-    this.spec.draw(this.fft.data, delta);
-
-    // Redraw FFTview.
-    this.fftView.draw(this.fft.data, delta);
+    if (this.visualizeMode == "spectrogram"){
+      this.spec.updateScale();
+      this.spec.draw(this.fft.data, delta);
+    }
+    
+    // Redraw FFTview
+    else if (this.visualizeMode == "1d-fft"){
+      this.fftView.draw(this.fft.data, delta);
+    }
 
     return true;
+  }
+
+  toggleView() {
+    this.visualizeMode = this.visualizeMode == "spectrogram" ? '1d-fft' : 'spectrogram'
   }
 }
